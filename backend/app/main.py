@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from .database import init_db
 from .routers import auth, tasks
@@ -14,6 +16,7 @@ cors_origins = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:8001",
     "http://127.0.0.1:8000",
+    "https://sonyjenith-d-weboin-pydev-intern-task.onrender.com",
 ]
 
 app.add_middleware(
@@ -29,17 +32,13 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(tasks.router)
 
+# Serve static frontend files
+frontend_path = Path(__file__).parent.parent.parent / "frontend"
+if frontend_path.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="frontend")
+
 
 @app.on_event("startup")
 def startup_event():
     """Initialize database on startup."""
     init_db()
-
-
-@app.get("/")
-def root():
-    """Root endpoint."""
-    return {
-        "message": "Task Manager API is running",
-        "docs": "/docs",
-    }
